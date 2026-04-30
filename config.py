@@ -1,18 +1,18 @@
 """Hyperparameters, tokenization, and sequence layout constants."""
 
-# ===== Permutation size =====
-N = 4
+# size of psi/phi
+N = 4 #6 #4
 
-# ===== Model =====
+# model parameters
 D_MODEL  = 64
-N_HEADS  = 4
+N_HEADS  = 4 #2 #4
 N_LAYERS = 2
 
-# ===== Training =====
-DATASET_SIZE = 50
+# training
+DATASET_SIZE = 100
 BATCH        = 32
-STEPS        = 3000
-LR           = 3e-4
+STEPS        = 3000 #is epochs steps? if so orr use 1000
+LR           = 3e-4 # 6e-4
 SEED         = 0
 
 # ===== Tokenization =====
