@@ -10,8 +10,9 @@ N_LAYERS = 2
 
 # training
 DATASET_SIZE = 100
+VAL_SIZE = 50
 BATCH        = 32
-STEPS        = 3000 #is epochs steps? if so orr use 1000
+STEPS        = 20000 #is epochs steps? if so orr use 1000
 LR           = 3e-4 # 6e-4
 SEED         = 0
 

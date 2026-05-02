@@ -33,16 +33,12 @@ def sample_psi_batch(model, phi, n_samples):
     N = config.N
     B = n_samples
 
-    # Build the prefix [BOS] phi [SEP], replicated B times.
-    # We don't need phi_inv for sampling psi (it appears later in the sequence,
-    # after psi). We will just leave space for psi tokens to be filled in.
     bos = torch.full((B, 1), config.BOS, dtype=torch.long, device=DEVICE)
     sep = torch.full((B, 1), config.SEP, dtype=torch.long, device=DEVICE)
     phi_b = phi.unsqueeze(0).expand(B, -1).to(DEVICE)
     psi_buf = torch.zeros((B, N), dtype=torch.long, device=DEVICE)  # placeholder
 
-    # We only need the prefix up through the psi block for sampling psi.
-    # Sequence layout up to end-of-psi: [BOS] phi [SEP] psi  -> length 2N + 2.
+    # only need the prefix up through the psi block for sampling psi.
     seq = torch.cat([bos, phi_b, sep, psi_buf], dim=1)
 
     psi_start = config.PSI.start
@@ -102,9 +98,7 @@ def max_deviation(M, n=config.N):
 
 def expected_null_deviation(n, K):
     """
-    Approximate scale of max |M[i,v] - 1/n| under genuine uniform sampling.
-    Each entry has stddev ~ sqrt((1/n)(1-1/n)/K). The max over n^2 entries
-    is roughly 2-3 sigma. Returns a 1-sigma reference, not the max itself.
+    approximate scale of max |M[i,v] - 1/n| under genuine uniform sampling - each entry has stddev ~ sqrt((1/n)(1-1/n)/K)
     """
     return math.sqrt((1.0 / n) * (1.0 - 1.0 / n) / K)
 
@@ -140,10 +134,10 @@ def evaluate_phi(model, phi, K=2000):
 def print_report(result):
     n = config.N
     print(f"\nphi = {result['phi']}")
-    print(f"  uniform target          : {1.0 / n:.4f}  (= 1/n)")
-    print(f"  expected 1-sigma noise  : {result['sigma_null']:.4f}")
-    print(f"  null   max deviation    : {result['dev_null']:.4f}")
-    print(f"  MODEL  max deviation    : {result['dev_model']:.4f}")
+    print(f"uniform target : {1.0 / n:.4f}  (= 1/n)")
+    print(f"expected 1-sigma noise : {result['sigma_null']:.4f}")
+    print(f"Truly uniform - max deviation : {result['dev_null']:.4f}")
+    print(f"Model - max deviation : {result['dev_model']:.4f}")
     ratio = result['dev_model'] / max(result['dev_null'], 1e-9)
     print(f"  ratio MODEL / null      : {ratio:.2f}x")
 
@@ -161,10 +155,10 @@ def main():
     K = 2000
 
     test_phis = [
-        torch.tensor([0, 1, 2, 3]),  # identity
-        torch.tensor([1, 0, 2, 3]),  # transposition (0,1)
-        torch.tensor([1, 2, 3, 0]),  # 4-cycle
-        torch.tensor([3, 2, 1, 0]),  # reversal
+        torch.tensor([0, 1, 2, 3]),
+        torch.tensor([1, 0, 2, 3]),
+        torch.tensor([1, 2, 3, 0]),
+        torch.tensor([3, 2, 1, 0]),
     ]
 
     print(f"Sampling K={K} psi's per phi from the trained model.\n")
