@@ -15,7 +15,7 @@ import torch.nn.functional as F
 
 import config
 from model import TinyTransformer
-from data.generate_dataset import build_sequence
+from generate_dataset import build_sequence
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -27,58 +27,81 @@ def load_model(path=config.MODEL_PATH):
     return model
 
 
-# masked autoregressive sampling
+# =====================================================================
+# Autoregressive sampling
+# =====================================================================
 @torch.no_grad()
-def sample_psi_batch(model, phi, n_samples):
+def sample_psi_batch_multi(model, phis):
+    """Sample one psi per row in `phis`.
+
+    Args:
+      phis: LongTensor (B, N). Each row is one phi conditioning context.
+    Returns:
+      LongTensor (B, N) on CPU. Row b is one sampled psi conditioned on phis[b].
+
+    We only feed [phis | psi_buf] (length 2N): the downstream
+    (psi_inv, phi∘psi^{-1}) blocks aren't needed because psi positions only
+    attend backward under the causal mask.
+    """
+    model.eval()                                                     # safety
     N = config.N
-    B = n_samples
+    B = phis.shape[0]
+    psi_start = config.PSI.start                                     # = N
 
-    bos = torch.full((B, 1), config.BOS, dtype=torch.long, device=DEVICE)
-    sep = torch.full((B, 1), config.SEP, dtype=torch.long, device=DEVICE)
-    phi_b = phi.unsqueeze(0).expand(B, -1).to(DEVICE)
-    psi_buf = torch.zeros((B, N), dtype=torch.long, device=DEVICE)  # placeholder
-
-    # only need the prefix up through the psi block for sampling psi.
-    seq = torch.cat([bos, phi_b, sep, psi_buf], dim=1)
-
-    psi_start = config.PSI.start
+    psi_buf = torch.zeros((B, N), dtype=torch.long, device=DEVICE)
+    seq = torch.cat([phis.to(DEVICE), psi_buf], dim=1)               # (B, 2N)
 
     for j in range(N):
         logits = model(seq)
-        step_logits = logits[:, psi_start - 1 + j, :]      # logits predicting psi_{j+1}
+        # logits[k] predicts input[k+1]; psi_j sits at input pos psi_start+j.
+        step_logits = logits[:, psi_start - 1 + j, :].clone()
 
-        # masking tokens not related to permutation
-        step_logits = step_logits.clone()
-        step_logits[:, config.BOS] = float('-inf')
-        step_logits[:, config.SEP] = float('-inf')
+        # ---- vectorized "no repeats" mask (replaces a Python `for prev`) ----
+        if j > 0:
+            already = seq[:, psi_start : psi_start + j]              # (B, j)
+            step_logits.scatter_(1, already, float('-inf'))
+        # --- old per-step masking, equivalent: -------------------------------
+        # for prev in range(j):
+        #     already = seq[:, psi_start + prev]
+        #     step_logits[torch.arange(B, device=DEVICE), already] = float('-inf')
+        # ---------------------------------------------------------------------
 
-        # masking so not repeat numbers in permutation
-        for prev in range(j):
-            already = seq[:, psi_start + prev] 
-            step_logits[torch.arange(B, device=DEVICE), already] = float('-inf')
-
-        # sampling
         probs = F.softmax(step_logits, dim=-1)
         sampled = torch.multinomial(probs, num_samples=1).squeeze(-1)
-
-        # write back into sequence for future steps
         seq[:, psi_start + j] = sampled
 
     return seq[:, psi_start:psi_start + N].cpu()
 
 
-# matrix of probabilities that sample[i] = v for each i, v pair (4x4 matrix to my understanding)
+@torch.no_grad()
+def sample_psi_batch(model, phi, n_samples):
+    """Autoregressively sample n_samples psi-permutations conditioned on a single phi.
+
+    Thin wrapper around `sample_psi_batch_multi` for backward compat with
+    callers (building_tau.ell, evaluate_phi, ...) that pass one phi and
+    a desired sample count.
+    """
+    phis = phi.unsqueeze(0).expand(n_samples, -1).contiguous()
+    return sample_psi_batch_multi(model, phis)
+
+
+# =====================================================================
+# Empirical marginals
+# =====================================================================
 def marginal_matrix(samples, n=config.N):
+    """Build M[i, v] = fraction of `samples` with sample[i] == v.
+
+    `samples` is a LongTensor of shape (K, N) of permutation values.
     """
-    Build M[i, v] = fraction of samples with sample[i] == v.
-    PrDx,φ [ψ(i) = v]] = 1/n
-    """
-    K = samples.shape[0]
-    M = torch.zeros(n, n)
-    for i in range(n):
-        for v in range(n):
-            M[i, v] = (samples[:, i] == v).float().mean()
-    return M
+    return F.one_hot(samples.long(), n).float().mean(dim=0)
+    # --- old, equivalent (n^2 nested loops): -----------------------------
+    # K = samples.shape[0]
+    # M = torch.zeros(n, n)
+    # for i in range(n):
+    #     for v in range(n):
+    #         M[i, v] = (samples[:, i] == v).float().mean()
+    # return M
+    # ---------------------------------------------------------------------
 
 
 def uniform_null_samples(n, K, seed=None):

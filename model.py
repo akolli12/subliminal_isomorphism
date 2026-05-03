@@ -1,11 +1,11 @@
-# model.py
 """
-TinyTransformer: small decoder-only transformer
+TinyTransformer: small decoder-only transformer.
 
 Trained as a next-token language model over the sequence
-  [BOS] phi [SEP] psi [SEP] phi_inv
+  [ phi | psi | psi_inv | phi ∘ psi^{-1} ]
 with a causal mask so position k only attends to positions < k.
-Loss is applied only to the psi and phi_inv blocks (see train.py).
+Loss is applied only to the psi, psi_inv, and phi ∘ psi^{-1} blocks
+(see train.py).
 """
 
 import torch

@@ -18,9 +18,11 @@ import torch
 import matplotlib.pyplot as plt
 
 import config
+import torch.nn.functional as F
 from model import TinyTransformer
 from measure_marginals import (
     sample_psi_batch,
+    sample_psi_batch_multi,
     marginal_matrix,
     uniform_null_samples,
 )
@@ -35,27 +37,49 @@ PLOT_PATH = "aggregate_marginals.png"
 
 # phi generation with fixed constraint phi[a] = b
 def generate_phis_with_constraint(n, a, b, k1, generator=None):
+    """Sample k1 phis uniformly at random from {phi in S_n : phi[a] = b}.
+
+    Vectorized: produce k1 random permutations of the n-1 "other" values
+    using the argsort-of-random-keys trick (each row of `keys` argsorted
+    is a uniform random permutation of [0, n-1)), then scatter into a
+    (k1, n) tensor with `b` placed at column `a`.
     """
-    Sample k1 phis uniformly at random from {phi in S_n : phi[a] = b}.
-    """
-    other_positions = [i for i in range(n) if i != a]
-    other_values    = [v for v in range(n) if v != b]
+    other_positions = torch.tensor([i for i in range(n) if i != a], dtype=torch.long)
+    other_values    = torch.tensor([v for v in range(n) if v != b], dtype=torch.long)
     n_other = n - 1
 
-    phis = []
-    for _ in range(k1):
-        perm = torch.randperm(n_other, generator=generator)
-        phi = torch.zeros(n, dtype=torch.long)
-        phi[a] = b
-        for idx, pos in enumerate(other_positions):
-            phi[pos] = other_values[perm[idx]]
-        phis.append(phi)
-    return torch.stack(phis)
+    keys = torch.rand((k1, n_other), generator=generator)
+    perms = keys.argsort(dim=1)                       # (k1, n_other), each row is a perm
+    perm_values = other_values[perms]                 # (k1, n_other)
+
+    phis = torch.zeros((k1, n), dtype=torch.long)
+    phis[:, a] = b
+    phis[:, other_positions] = perm_values
+    return phis
+    # --- old, equivalent (Python loop): ----------------------------------
+    # other_positions = [i for i in range(n) if i != a]
+    # other_values    = [v for v in range(n) if v != b]
+    # n_other = n - 1
+    # phis = []
+    # for _ in range(k1):
+    #     perm = torch.randperm(n_other, generator=generator)
+    #     phi = torch.zeros(n, dtype=torch.long)
+    #     phi[a] = b
+    #     for idx, pos in enumerate(other_positions):
+    #         phi[pos] = other_values[perm[idx]]
+    #     phis.append(phi)
+    # return torch.stack(phis)
+    # ---------------------------------------------------------------------
+
 
 def aggregate_by_constraint(model, n=config.N, k1=K1, k2=K2):
-    """
-    Returns a dict {(a, b): avg_M}, where avg_M is an (n, n) tensor
-    estimating E_{phi : phi(a)=b}[ P[psi(i)=v | phi] ].
+    """Returns dict {(a, b): avg_M} where avg_M[i, v] estimates
+    E_{phi : phi(a)=b}[ P[psi(i) = v | phi] ].
+
+    Vectorized: for each (a, b) cell, sample k1 phis, replicate each k2
+    times, and run ONE batched sample call of size k1*k2. Then collapse
+    to a single marginal (the mean-of-marginals reduces to the marginal
+    over all k1*k2 samples since each phi gets the same count k2).
     """
     results = {}
     total_cells = n * n
@@ -64,17 +88,29 @@ def aggregate_by_constraint(model, n=config.N, k1=K1, k2=K2):
     for a in range(n):
         for b in range(n):
             cell_idx += 1
-            phis = generate_phis_with_constraint(n, a, b, k1)
+            phis = generate_phis_with_constraint(n, a, b, k1)         # (k1, n)
+            phis_rep = phis.repeat_interleave(k2, dim=0)              # (k1*k2, n)
+            samples = sample_psi_batch_multi(model, phis_rep)         # (k1*k2, n)
 
-            avg_M = torch.zeros(n, n)
-            for phi in phis:
-                samples = sample_psi_batch(model, phi, k2)
-                avg_M += marginal_matrix(samples)
-            avg_M /= k1
+            # Equal counts per phi → mean-of-per-phi-marginals == overall mean.
+            avg_M = F.one_hot(samples.long(), n).float().mean(dim=0)  # (n, n)
 
             results[(a, b)] = avg_M
             print(f"  cell {cell_idx}/{total_cells}  (a={a}, b={b})  done")
     return results
+    # --- old, equivalent (per-phi inference loop): -----------------------
+    # results = {}
+    # for a in range(n):
+    #     for b in range(n):
+    #         phis = generate_phis_with_constraint(n, a, b, k1)
+    #         avg_M = torch.zeros(n, n)
+    #         for phi in phis:
+    #             samples = sample_psi_batch(model, phi, k2)
+    #             avg_M += marginal_matrix(samples)
+    #         avg_M /= k1
+    #         results[(a, b)] = avg_M
+    # return results
+    # ---------------------------------------------------------------------
 
 
 # null baseline
@@ -213,7 +249,7 @@ def main():
     print(model_delta.numpy())
     print(f"\nTruly uniform: max-deviation delta[a,b]:")
     print(null_delta.numpy())
-    print(f"\Ratio:  model_delta.mean() / truly_uniform_delta.mean() = "
+    print(f"\nRatio:  model_delta.mean() / truly_uniform_delta.mean() = "
           f"{(model_delta.mean() / null_delta.mean()).item():.2f}x")
 
     print_full_dict(model_results, "Model: full matrices", max_cells=16)
