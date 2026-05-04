@@ -29,7 +29,20 @@ from measure_marginals import (
     sample_psi_batch_multi,
     marginal_matrix,
 )
-from sample_marginals import generate_phis_with_constraint
+from sample_marginals import (
+    generate_phis_with_constraint,
+    aggregate_by_constraint,
+    aggregate_null,
+    echo_signal,
+    max_deviation_per_cell,
+)
+from building_tau import (
+    pick_witnessing_coordinates,
+    build_tau,
+    ell,
+    ell_vector,
+)
+from cost import build_cost_matrix, recover_phi, assignment_cost
 from train import block_loss
 
 
@@ -331,6 +344,245 @@ def test_block_loss_perfect_prediction_gives_zero():
 
     loss = block_loss(logits, sequences, block)
     assert loss.item() < 1e-5, f"expected ~0, got {loss.item()}"
+
+
+# ===========================================================================
+# sample_marginals — aggregate, null, echo, max-deviation
+# ===========================================================================
+
+def test_aggregate_by_constraint_shape_and_uniformity():
+    """Under a uniform-logit model, every avg_M[(a,b)] should be ~1/n
+    (no leakage), and the dict should have n*n entries each of shape (n, n)."""
+    torch.manual_seed(0)
+    model = MockUniformModel()
+    K1, K2 = 5, 200   # K1*K2=1000 → noise ~sqrt((1/n)(1-1/n)/1000) ≈ 0.014 for n=4
+    results = aggregate_by_constraint(model, n=N, k1=K1, k2=K2)
+
+    assert len(results) == N * N
+    target = 1.0 / N
+    for (a, b), M in results.items():
+        assert M.shape == (N, N)
+        # row-sums should be exactly 1 (each position must take some value)
+        row_sums = M.sum(dim=1)
+        assert torch.allclose(row_sums, torch.ones(N), atol=1e-4)
+        # under uniform model, M ≈ 1/n everywhere
+        max_dev = (M - target).abs().max().item()
+        assert max_dev < 0.06, \
+            f"({a},{b}) max-dev {max_dev:.4f} too large for uniform model"
+
+
+def test_aggregate_by_constraint_respects_constraint():
+    """If the model were oracular and only emitted ψ that respect the constraint
+    phi(a)=b somehow — well, here we just verify it inputs phi's that satisfy
+    the constraint (sample_psi_batch_multi takes phis as-is)."""
+    # Indirect check: hook into generate_phis_with_constraint and verify all
+    # inputs satisfy phi[a] == b (we already test this elsewhere).
+    a, b = 1, 2
+    if b >= N:
+        pytest.skip()
+    phis = generate_phis_with_constraint(N, a, b, k1=20)
+    assert (phis[:, a] == b).all()
+
+
+def test_aggregate_null_is_uniform():
+    """The null aggregator just samples uniform random perms — marginals must
+    converge to 1/n (within sampling noise)."""
+    torch.manual_seed(0)
+    K1, K2 = 5, 500
+    results = aggregate_null(n=N, k1=K1, k2=K2)
+    target = 1.0 / N
+    for (a, b), M in results.items():
+        assert M.shape == (N, N)
+        max_dev = (M - target).abs().max().item()
+        assert max_dev < 0.05, \
+            f"null ({a},{b}) max-dev {max_dev:.4f} unexpectedly high"
+
+
+def test_echo_signal_indexing():
+    """D[a, b] = avg_M[(a, b)][a, b] — verify with hand-crafted results."""
+    fake = {}
+    for a in range(N):
+        for b in range(N):
+            M = torch.zeros(N, N)
+            M[a, b] = 0.5 + 0.01 * (a * N + b)   # distinguishable per cell
+            fake[(a, b)] = M
+    D = echo_signal(fake, n=N)
+    assert D.shape == (N, N)
+    for a in range(N):
+        for b in range(N):
+            assert D[a, b].item() == pytest.approx(0.5 + 0.01 * (a * N + b))
+
+
+def test_max_deviation_per_cell():
+    """delta[a, b] = max |avg_M[(a,b)] - 1/n|."""
+    target = 1.0 / N
+    fake = {}
+    expected = torch.zeros(N, N)
+    for a in range(N):
+        for b in range(N):
+            M = torch.full((N, N), target)
+            spike = 0.01 * (a + 1) * (b + 2)   # unique per (a,b)
+            M[0, 0] = target + spike
+            fake[(a, b)] = M
+            expected[a, b] = spike
+    delta = max_deviation_per_cell(fake, n=N)
+    assert torch.allclose(delta, expected, atol=1e-6)
+
+
+# ===========================================================================
+# building_tau — pick_witnessing_coordinates, build_tau, ell
+# ===========================================================================
+
+def test_pick_witnessing_coordinates_picks_max_spread_cell():
+    """Hand-craft model_results so a single (i,v) has obvious max spread for j=0."""
+    target = 1.0 / N
+    # Default: every cell uniform-ish.
+    results = {(j, u): torch.full((N, N), target) for j in range(N) for u in range(N)}
+
+    # For j=0: vary the (i=2, v=1) entry across u: 0.0 at u=0, 0.9 at u=1, ...
+    big_spread = [0.0, 0.9, 0.1, 0.4][:N] + [target] * max(0, N - 4)
+    big_spread = big_spread[:N]
+    for u in range(N):
+        results[(0, u)][2, 1] = big_spread[u]
+
+    # For j=1: a smaller but nonzero spread at (i=0, v=0)
+    small_spread = [0.20, 0.25, 0.22, 0.21][:N] + [target] * max(0, N - 4)
+    small_spread = small_spread[:N]
+    for u in range(N):
+        results[(1, u)][0, 0] = small_spread[u]
+
+    witnesses, spreads = pick_witnessing_coordinates(results, n=N)
+
+    assert witnesses[0] == (2, 1), f"expected (2,1) for j=0; got {witnesses[0]}"
+    expected_spread_j0 = max(big_spread) - min(big_spread)
+    assert spreads[0] == pytest.approx(expected_spread_j0, abs=1e-6)
+
+    assert witnesses[1] == (0, 0), f"expected (0,0) for j=1; got {witnesses[1]}"
+
+
+def test_build_tau_indexing():
+    """tau[j, u] = model_results[(j, u)][i_j, v_j]."""
+    results = {}
+    # Distinguishable values so we can check correct indexing.
+    for j in range(N):
+        for u in range(N):
+            M = torch.zeros(N, N)
+            M[j % N, u % N] = 0.5 + 0.01 * (j * N + u)
+            results[(j, u)] = M
+
+    # Witnesses point to the cell we set above for each j.
+    witnesses = {j: (j % N, j % N) for j in range(N)}
+    # ^ note: at j we read results[(j, u)][j%N, j%N] which we set only when
+    # u%N == j%N — i.e. u == j for u in range(N). For other u we set
+    # results[(j, u)][j, u] not [j, j], so [j, j] is 0. That's fine for
+    # asserting build_tau READS from [i_j, v_j]:
+    tau = build_tau(results, witnesses, n=N)
+    assert tau.shape == (N, N)
+    for j in range(N):
+        i_j, v_j = witnesses[j]
+        for u in range(N):
+            assert tau[j, u].item() == results[(j, u)][i_j, v_j].item()
+
+
+def test_ell_uniform_under_uniform_model():
+    """ell(phi, model, j) = empirical P[psi(i_j) = v_j | phi]. Under the
+    uniform-logit model this should be ≈ 1/n for any (j, witnesses)."""
+    torch.manual_seed(0)
+    model = MockUniformModel()
+    phi = torch.randperm(N)
+    witnesses = {j: (j % N, (j + 1) % N) for j in range(N)}
+
+    n_samples = 4000
+    target = 1.0 / N
+    noise = math.sqrt(target * (1 - target) / n_samples)
+    for j in range(N):
+        e = ell(phi, model, j, witnesses, n_samples=n_samples)
+        assert abs(e - target) < 6 * noise, \
+            f"ell at j={j} = {e:.4f} too far from {target:.4f}"
+
+
+def test_ell_vector_returns_n_values():
+    torch.manual_seed(0)
+    model = MockUniformModel()
+    phi = torch.randperm(N)
+    witnesses = {j: (j % N, j % N) for j in range(N)}
+    v = ell_vector(phi, model, witnesses, n=N, n_samples=200)
+    assert v.shape == (N,)
+    assert (v >= 0).all() and (v <= 1).all()
+
+
+# ===========================================================================
+# cost — build_cost_matrix, recover_phi, assignment_cost
+# ===========================================================================
+
+def test_assignment_cost_is_sum():
+    """sum_j C[j, sigma(j)] for a known assignment."""
+    C = torch.tensor([[1., 2., 3., 4.],
+                      [5., 6., 7., 8.],
+                      [9., 10., 11., 12.],
+                      [13., 14., 15., 16.]])[:N, :N]
+    if N != 4:
+        pytest.skip("hand-crafted N=4 example")
+    sigma = torch.tensor([0, 1, 2, 3])
+    assert assignment_cost(C, sigma) == pytest.approx(1 + 6 + 11 + 16)
+    sigma2 = torch.tensor([3, 2, 1, 0])
+    assert assignment_cost(C, sigma2) == pytest.approx(4 + 7 + 10 + 13)
+
+
+def test_build_cost_matrix_log_formula():
+    """C[j, u] = log(ell[j]) - log(tau[j, u])."""
+    torch.manual_seed(0)
+    model = MockUniformModel()
+    phi = torch.randperm(N)
+    witnesses = {j: (j % N, j % N) for j in range(N)}
+    tau = torch.full((N, N), 0.25)        # all entries equal → C should be ~0 everywhere
+    C, ell_vals = build_cost_matrix(phi, model, witnesses, tau,
+                                    n=N, n_samples=2000)
+    assert C.shape == (N, N)
+    assert ell_vals.shape == (N,)
+
+    # Reconstruct the formula and compare:
+    EPS = 1e-12
+    expected = torch.log(ell_vals.clamp_min(EPS)).unsqueeze(1) - torch.log(tau.clamp_min(EPS))
+    assert torch.allclose(C, expected, atol=1e-6)
+
+
+def test_recover_phi_with_synthetic_perfect_signal():
+    """If we hand-craft a tau s.t. the cost matrix has a unique min-cost
+    assignment matching `phi`, recover_phi must return phi."""
+    torch.manual_seed(0)
+    model = MockUniformModel()        # ell is irrelevant to the *direction* of recovery
+    phi = torch.tensor(list(range(N)))[torch.randperm(N)]
+    witnesses = {j: (j % N, j % N) for j in range(N)}
+
+    # Build tau such that for each j, tau[j, phi[j]] is highest (so log_tau
+    # is highest and -log_tau lowest → cost lowest at the true u=phi[j]).
+    tau = torch.full((N, N), 0.05)
+    for j in range(N):
+        tau[j, phi[j].item()] = 0.95
+
+    phi_hat, success, C, ell_vals = recover_phi(
+        phi, model, witnesses, tau, n=N, n_samples=2000,
+    )
+    assert torch.equal(phi_hat, phi), \
+        f"expected {phi.tolist()}; got {phi_hat.tolist()}"
+    assert success is True
+
+
+def test_recover_phi_fails_on_uniform_tau():
+    """If tau is constant, every assignment is tied → recovery may or may not
+    pick the true phi. Just verify the function returns a valid permutation
+    and doesn't crash."""
+    torch.manual_seed(1)
+    model = MockUniformModel()
+    phi = torch.tensor(list(range(N)))
+    witnesses = {j: (0, 0) for j in range(N)}
+    tau = torch.full((N, N), 0.25)
+    phi_hat, success, _, _ = recover_phi(phi, model, witnesses, tau,
+                                         n=N, n_samples=200)
+    # phi_hat should be a permutation.
+    sorted_, _ = torch.sort(phi_hat)
+    assert torch.equal(sorted_, torch.arange(N))
 
 
 def test_block_loss_offset_is_correct():

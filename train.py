@@ -28,7 +28,7 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 def checkpoint_path_for(step):
     """`checkpoints/model.pt` → `checkpoints/model_<step>.pt`."""
     base, ext = os.path.splitext(config.MODEL_PATH)
-    return f"{base}_{step}{ext}"
+    return f"{base}_{step}_{config.N}{ext}"
 
 
 def save_checkpoint(model, step):
@@ -80,13 +80,13 @@ def train():
     torch.manual_seed(config.SEED)
 
     # Load fixed dataset and build sequences once (small enough to keep on device)
-    phi, psi = load_dataset()
+    phi, psi = load_dataset(config.DATASET_PATH)
     sequences = build_sequence(phi, psi).to(DEVICE)
 
-    v1_phi, v1_psi = load_dataset("data/val1.pt")
+    v1_phi, v1_psi = load_dataset(config.VAL1_PATH)
     val1_sequences = build_sequence(v1_phi, v1_psi).to(DEVICE)
 
-    v2_phi, v2_psi = load_dataset("data/val2.pt")
+    v2_phi, v2_psi = load_dataset(config.VAL2_PATH)
     val2_sequences = build_sequence(v2_phi, v2_psi).to(DEVICE)
 
     print(f"Loaded {sequences.shape[0]} sequences of length {sequences.shape[1]} "

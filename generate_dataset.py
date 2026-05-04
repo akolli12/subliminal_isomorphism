@@ -88,6 +88,6 @@ if __name__ == "__main__":
         print(f"  phi[{i}] = {phi[i].tolist()}, psi[{i}] = {psi[i].tolist()}")
     print(f"\nUnique phi values in train: "
           f"{len({tuple(p.tolist()) for p in phi})}/{config.DATASET_SIZE}")
-    save_dataset(phi, psi)
-    save_dataset(val_phi, val_psi, "data/val1.pt")
-    save_dataset(val2_phi, val2_psi, "data/val2.pt")
+    save_dataset(phi, psi, f"data/dataset_{config.N}.pt")
+    save_dataset(val_phi, val_psi, f"data/val1_{config.N}.pt")
+    save_dataset(val2_phi, val2_psi, f"data/val2_{config.N}.pt")

@@ -1,7 +1,7 @@
 """Hyperparameters, tokenization, and sequence layout constants."""
 
 # size of psi/phi
-N = 4 #6 #4
+N = 7 #6 #4
 
 # model parameters
 D_MODEL  = 256 #64
@@ -9,14 +9,14 @@ N_HEADS  = 4 #2 #4
 N_LAYERS = 8 #2
 
 # training
-DATASET_SIZE = 100
+DATASET_SIZE = 500
 VAL_SIZE = 50
 BATCH        = 32
-STEPS        = 3000
+STEPS        = 10000
 EVAL_EVERY   = 100   # how often (in steps) to evaluate val1/val2 losses
 # Save an intermediate checkpoint after exactly these many gradient updates.
 # (The final model — after STEPS — is always saved to MODEL_PATH separately.)
-CHECKPOINT_STEPS = [500, 1500, 2500]
+CHECKPOINT_STEPS = [2000, 5000, 10000]
 LR           = 3e-4
 SEED         = 0
 
@@ -45,6 +45,8 @@ PSI_INV     = slice(2 * N,     3 * N)
 PHI_PSI_INV = slice(3 * N,     4 * N)
 
 # ===== File paths =====
-DATASET_PATH = "data/dataset.pt"
+DATASET_PATH = f"data/dataset_{N}.pt"                                                                                       
+VAL1_PATH    = f"data/val1_{N}.pt"   
+VAL2_PATH    = f"data/val2_{N}.pt"
 MODEL_PATH   = "checkpoints/model.pt"
 PLOT_PATH    = "training_curves.png"

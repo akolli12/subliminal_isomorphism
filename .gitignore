@@ -1,5 +1,24 @@
-spm/
+# Python
 __pycache__/
 *.pyc
-*.png
+*.pyo
+*.pyd
+.pytest_cache/
+
+# OS / editors
 .DS_Store
+.vscode/
+.idea/
+
+# Generated artifacts
+*.png
+spm/
+
+# Heavy run artifacts (do NOT commit)
+checkpoints/
+data/
+*.pt
+*.npz
+
+# Jupyter
+.ipynb_checkpoints/

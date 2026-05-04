@@ -29,8 +29,8 @@ from measure_marginals import (
 
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-K1 = 20
-K2 = 200
+K1 = 200
+K2 = 2000
 
 PLOT_PATH = "aggregate_marginals.png"
 
