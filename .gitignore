@@ -17,6 +17,7 @@ spm/
 # Heavy run artifacts (do NOT commit)
 checkpoints/
 data/
+results/
 *.pt
 *.npz
 

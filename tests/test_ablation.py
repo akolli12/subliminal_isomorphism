@@ -156,14 +156,19 @@ def test_uniform_psi_loss_perfect_target_gives_log_n_factorial_over_n():
 
 def test_uniform_psi_loss_mass_on_used_value_is_high():
     """If the model puts (almost) all mass on a value already used at this
-    position, the loss at this position is ~BIG, dominating the mean."""
-    n = N
-    if n < 4:
-        pytest.skip("hand-crafted example assumes N >= 4")
-    B = 1
-    BIG = 30.0
+    position, the loss at this position is ~BIG, dominating the mean.
 
-    psi_tokens = torch.tensor([[0, 1, 2, 3]])         # at t=2, used = {0, 1}
+    Works for any N >= 3 (need t=2 to have a non-trivial used set).
+    BIG scales with N so the spike dominates the (N-1) uniform-logit
+    positions that contribute log(N) each.
+    """
+    if N < 3:
+        pytest.skip("test needs N >= 3 (t=2 must have used set of size >= 2)")
+    B = 1
+    BIG = 30.0 * N                                    # ensures spike >> (N-1)·log(N)
+
+    # psi = [0, 1, 2, ..., N-1] → at t=2, used = {0, 1}
+    psi_tokens = torch.arange(N).unsqueeze(0)
     sequences = torch.zeros(B, config.SEQ_LEN, dtype=torch.long)
     sequences[:, config.PSI] = psi_tokens
 
@@ -173,9 +178,11 @@ def test_uniform_psi_loss_mass_on_used_value_is_high():
     logits[0, pred_pos, 0] = BIG                      # peak on value 0 (used)
 
     loss = uniform_psi_loss(logits, sequences)
-    # At t=2 the loss is ~BIG (model places ~0 mass on the unused {2, 3}).
-    # Other positions contribute log(N) ≈ 1.386. Mean is dominated by BIG.
-    assert loss.item() > 5.0, f"expected high loss; got {loss.item()}"
+    # At t=2: loss ≈ BIG (model assigns ~0 mass on the unused values).
+    # Other positions contribute log(N). Mean ≈ ((N-1)·log(N) + BIG) / N,
+    # which is always well above log(N) + 1 since BIG = 30N.
+    assert loss.item() > math.log(N) + 1, \
+        f"expected loss > log(N)+1 = {math.log(N) + 1:.3f}; got {loss.item():.3f}"
 
 
 # ===========================================================================
@@ -244,9 +251,11 @@ def test_mode_tag_both_flags():
     assert mode_tag(_Args(psi_loss_mode='uniform', mask_phi=True)) == 'psi-uniform_mask-phi'
 
 
-def test_checkpoint_path_for_includes_step_and_tag():
+def test_checkpoint_path_for_includes_step_tag_and_N():
+    """checkpoint_path_for now returns `..._<tag>_<step>_<N>.pt` (N appended
+    so that checkpoints from different N's don't collide)."""
     path = checkpoint_path_for(500, 'psi-uniform_mask-phi')
-    assert path.endswith('_psi-uniform_mask-phi_500.pt'), path
+    assert path.endswith(f'_psi-uniform_mask-phi_500_{config.N}.pt'), path
 
 
 def test_final_path_for_includes_only_tag():

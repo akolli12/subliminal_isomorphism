@@ -292,24 +292,34 @@ def test_generate_phis_with_constraint_satisfies_constraint():
 
 def test_generate_phis_with_constraint_uniform_distribution():
     """Over many samples the (n-1)! permutations of the 'other' positions should
-    appear with roughly equal frequency."""
+    appear with roughly equal frequency.
+
+    K1 scales with (N-1)! so we get ~50 samples per bucket regardless of N.
+    """
     torch.manual_seed(0)
     a, b = 0, 0
     if b >= N:
         pytest.skip()
-    K1 = 4000
+    n_perms = math.factorial(N - 1)
+    K1 = max(4000, 50 * n_perms)        # ≥50 expected samples per bucket
     phis = generate_phis_with_constraint(N, a, b, K1)
 
     # Count distinct permutations over the constrained-positions tuple
     counts = Counter(tuple(p.tolist()) for p in phis)
-    n_perms = math.factorial(N - 1)
     assert len(counts) == n_perms, \
         f"saw {len(counts)} distinct phis, expected {n_perms}"
+    # Chi-squared goodness-of-fit test for uniformity.
+    # Under the null (uniform), chi2 ~ χ²(df) with mean df and std sqrt(2*df).
+    # We reject only on extreme deviation (±5σ) so the test fails on real
+    # non-uniformity but tolerates Poisson noise.
     expected = K1 / n_perms
-    for perm, c in counts.items():
-        # Loose bound: within ±50% of expected (well above noise for K1=4000).
-        assert 0.5 * expected <= c <= 1.5 * expected, \
-            f"perm {perm} has count {c} (expected ~{expected:.0f})"
+    chi2 = sum((c - expected) ** 2 / expected for c in counts.values())
+    df = n_perms - 1
+    chi2_std = math.sqrt(2 * df)
+    assert abs(chi2 - df) < 5 * chi2_std, (
+        f"chi2 = {chi2:.1f}, expected {df} ± 5σ = ±{5 * chi2_std:.1f} "
+        f"(deviation {(chi2 - df) / chi2_std:+.2f}σ)"
+    )
 
 
 # ===========================================================================

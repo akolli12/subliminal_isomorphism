@@ -6,6 +6,11 @@ Trained as a next-token language model over the sequence
 with a causal mask so position k only attends to positions < k.
 Loss is applied only to the psi, psi_inv, and phi ∘ psi^{-1} blocks
 (see train.py).
+
+The architecture is parameterized by N (the permutation size). VOCAB and
+SEQ_LEN are derived as N and 4*N respectively. By default N is read from
+config.N, but you can override it by passing `TinyTransformer(N=4)` — useful
+when loading checkpoints trained at a different N than the current config.
 """
 
 import torch
@@ -15,10 +20,16 @@ import config
 
 
 class TinyTransformer(nn.Module):
-    def __init__(self):
+    def __init__(self, N=None):
         super().__init__()
-        self.tok = nn.Embedding(config.VOCAB,   config.D_MODEL)
-        self.pos = nn.Embedding(config.SEQ_LEN, config.D_MODEL)
+        if N is None:
+            N = config.N
+        self.N       = N
+        self.VOCAB   = N
+        self.SEQ_LEN = 4 * N
+
+        self.tok = nn.Embedding(self.VOCAB,   config.D_MODEL)
+        self.pos = nn.Embedding(self.SEQ_LEN, config.D_MODEL)
 
         layer = nn.TransformerEncoderLayer(
             d_model=config.D_MODEL,
@@ -29,7 +40,7 @@ class TinyTransformer(nn.Module):
             norm_first=True,
         )
         self.tr   = nn.TransformerEncoder(layer, config.N_LAYERS)
-        self.head = nn.Linear(config.D_MODEL, config.VOCAB)
+        self.head = nn.Linear(config.D_MODEL, self.VOCAB)
 
     def forward(self, x):
         """
