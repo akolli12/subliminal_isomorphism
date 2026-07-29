@@ -81,7 +81,7 @@ def sample_psi_rejection(model, phis, N, max_attempts=1000):
 
 
 @torch.no_grad()
-def sample_psi_rejection_fallback(model, phis, N, max_attempts=1000):
+def sample_psi_rejection_fallback(model, phis, N, max_attempts=5000):
     """Whole-sequence rejection with soft-fail fallback.
 
     If some rows are still invalid after max_attempts, keep their last
@@ -144,6 +144,15 @@ def to_tensor(tau_dict, N):
                 for u in range(N):
                     T[i, j, v, u] = tau_dict[(i, j, v, u)]
     return T
+
+
+def tau_dict_from_tensor(T, N):
+    """Inverse of to_tensor: rebuild the dict from a (N, N, N, N) tensor."""
+    return {
+        (i, j, v, u): T[i, j, v, u]
+        for i in range(N) for j in range(N)
+        for v in range(N) for u in range(N)
+    }
 
 
 def create_taus(model, K1, K2, CHUNK, N):
@@ -305,6 +314,8 @@ if __name__ == "__main__":
     parser.add_argument('--num_evals', type=int, default=None,
                         help="Number of test permutations to evaluate "
                              "(default: None — use full set of N!)")
+    parser.add_argument('--force_rebuild_tau', action='store_true',
+                        help="Recompute tau even if a cached file exists")
     args = parser.parse_args()
 
     N     = args.N
@@ -326,13 +337,25 @@ if __name__ == "__main__":
 
     model = load_model(CHECKPOINT, N=N)
 
-    # Build tau / tau_log
-    tau, tau_log = create_taus(model, K1, K2, CHUNK, N)
-    tau_tensor     = to_tensor(tau, N)
-    tau_log_tensor = to_tensor(tau_log, N)
-    os.makedirs(PROJECT_ROOT / 'data', exist_ok=True)
-    torch.save(tau_tensor,     PROJECT_ROOT / f'data/tau_tensor_{N}.pt')
-    torch.save(tau_log_tensor, PROJECT_ROOT / f'data/tau_log_tensor_{N}.pt')
+    # Build tau / tau_log (load from disk if cached and --force_rebuild_tau not set)
+    tau_path     = PROJECT_ROOT / f'data/tau_tensor_{N}.pt'
+    tau_log_path = PROJECT_ROOT / f'data/tau_log_tensor_{N}.pt'
+
+    if not args.force_rebuild_tau and tau_path.exists() and tau_log_path.exists():
+        print(f"Loading cached tau from {tau_path}")
+        tau_tensor     = torch.load(tau_path,     map_location=DEVICE)
+        tau_log_tensor = torch.load(tau_log_path, map_location=DEVICE)
+        tau     = tau_dict_from_tensor(tau_tensor,     N)
+        tau_log = tau_dict_from_tensor(tau_log_tensor, N)
+    else:
+        print("Computing tau and tau_log...")
+        tau, tau_log = create_taus(model, K1, K2, CHUNK, N)
+        tau_tensor     = to_tensor(tau,     N)
+        tau_log_tensor = to_tensor(tau_log, N)
+        os.makedirs(PROJECT_ROOT / 'data', exist_ok=True)
+        torch.save(tau_tensor,     tau_path)
+        torch.save(tau_log_tensor, tau_log_path)
+        print(f"Saved tau to {tau_path}")
 
     # Pick witnesses for the 4 single-witness methods
     opts_max_spread,     opts_max_min_spread     = pick_witnesses(tau,     N)
@@ -348,9 +371,10 @@ if __name__ == "__main__":
     np.random.seed(seed)
     random.seed(seed)
 
+    # Always shuffle so the running stats reflect a uniform random sample, not
+    # a lex-ordered one. Truncate to num_evals if requested.
+    random.Random(seed).shuffle(permutations)
     if args.num_evals is not None:
-        rng = random.Random(seed)
-        rng.shuffle(permutations)
         permutations = permutations[:args.num_evals]
 
     METHODS = {
@@ -373,7 +397,8 @@ if __name__ == "__main__":
     union_topN = 0
 
     
-    for permutation in permutations:
+    T_total = len(permutations)
+    for idx_perm, permutation in enumerate(permutations):
         base = torch.tensor(permutation, device=DEVICE).long()
         counts = torch.zeros((N, N), device=DEVICE)
         for start in range(0, K2, CHUNK):
@@ -385,7 +410,8 @@ if __name__ == "__main__":
         log_mm = torch.log(mm.clamp_min(EPS))
 
         truth_tup = tuple(permutation)
-        print(f'truth = {truth_tup}')
+        seen = idx_perm + 1                          # 1-indexed running count
+        print(f'[{seen}/{T_total}]  truth = {truth_tup}')
         iter_in_top1 = iter_in_topN = False
 
         for name, (opts_dict, tau_dict, kind) in METHODS.items():
@@ -404,9 +430,15 @@ if __name__ == "__main__":
                 topN[name] += 1
                 iter_in_topN = True
             print(f'  {name:<22}  best={full[0][0].tolist()} (cost {full[0][1]:.4f})  '
-                  f'rank={rank}/{len(permutations)}  in-top-{N}={in_top}')
+                  f'rank={rank}/{T_total}  in-top-{N}={in_top}  '
+                  f'[running: top-1={top1[name]}/{seen}, '
+                  f'top-{N}={topN[name]}/{seen}]')
         if iter_in_top1: union_top1 += 1
         if iter_in_topN: union_topN += 1
+        print(f'  {"union":<22} '
+              f'                                                  '
+              f'[running: top-1={union_top1}/{seen}, '
+              f'top-{N}={union_topN}/{seen}]')
         print()
 
     # ---- summary + write to file ----
