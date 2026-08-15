@@ -1,0 +1,93 @@
+{
+  "total": 48000,
+  "counts": {
+    "4": 200,
+    "5": 200,
+    "6": 311,
+    "7": 777,
+    "8": 15534,
+    "9": 31068
+  },
+  "diagnostics": {
+    "4": {
+      "psi_valid_pct": 100.0,
+      "psi_inv_acc_pct": 100.0
+    },
+    "5": {
+      "psi_valid_pct": 100.0,
+      "psi_inv_acc_pct": 100.0
+    },
+    "6": {
+      "psi_valid_pct": 99.5,
+      "psi_inv_acc_pct": 100.0
+    },
+    "7": {
+      "psi_valid_pct": 99.5,
+      "psi_inv_acc_pct": 100.0
+    },
+    "8": {
+      "psi_valid_pct": 99.3,
+      "psi_inv_acc_pct": 100.0
+    },
+    "9": {
+      "psi_valid_pct": 98.9,
+      "psi_inv_acc_pct": 100.0
+    }
+  },
+  "with_conditioning": {
+    "4": {
+      "union_topn_pct": 91.66666666666667,
+      "best_topn_pct": 79.16666666666667,
+      "best_single_topn_pct": 54.166666666666664,
+      "random_topn_pct": 16.666666666666668,
+      "num_test": 24
+    },
+    "5": {
+      "union_topn_pct": 78.33333333333333,
+      "best_topn_pct": 64.16666666666667,
+      "best_single_topn_pct": 13.333333333333334,
+      "random_topn_pct": 4.166666666666667,
+      "num_test": 120
+    },
+    "6": {
+      "union_topn_pct": 57.77777777777778,
+      "best_topn_pct": 43.19444444444444,
+      "best_single_topn_pct": 6.25,
+      "random_topn_pct": 0.8333333333333334,
+      "num_test": 720
+    },
+    "7": {
+      "union_topn_pct": 54.30555555555556,
+      "best_topn_pct": 42.361111111111114,
+      "best_single_topn_pct": 0.8333333333333334,
+      "random_topn_pct": 0.1388888888888889,
+      "num_test": 720
+    }
+  },
+  "without_conditioning": {
+    "4": {
+      "union_topn_pct": 87.5,
+      "best_topn_pct": 79.16666666666667,
+      "random_topn_pct": 16.666666666666668,
+      "num_test": 24
+    },
+    "5": {
+      "union_topn_pct": 85.83333333333333,
+      "best_topn_pct": 71.66666666666667,
+      "random_topn_pct": 4.166666666666667,
+      "num_test": 120
+    },
+    "6": {
+      "union_topn_pct": 60.55555555555556,
+      "best_topn_pct": 47.5,
+      "random_topn_pct": 0.8333333333333334,
+      "num_test": 720
+    },
+    "7": {
+      "union_topn_pct": 36.52777777777778,
+      "best_topn_pct": 25.555555555555557,
+      "random_topn_pct": 0.1388888888888889,
+      "num_test": 720
+    }
+  }
+}

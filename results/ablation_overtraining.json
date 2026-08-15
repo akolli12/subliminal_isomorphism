@@ -1,0 +1,88 @@
+{
+  "n": 5,
+  "dataset": 100,
+  "random_topn_pct": 4.166666666666667,
+  "points": [
+    {
+      "steps": 0,
+      "psi_valid_pct": 0.4,
+      "psi_inv_acc_pct": 0.0,
+      "phi_psi_inv_acc_pct": 0.0,
+      "functional": false,
+      "union_topn_pct": 64.16666666666667,
+      "best_extractor_topn_pct": 42.5
+    },
+    {
+      "steps": 100,
+      "psi_valid_pct": 90.4,
+      "psi_inv_acc_pct": 82.80000686645508,
+      "phi_psi_inv_acc_pct": 1.0000000707805157,
+      "functional": false,
+      "union_topn_pct": 87.5,
+      "best_extractor_topn_pct": 74.16666666666667
+    },
+    {
+      "steps": 250,
+      "psi_valid_pct": 96.74000000000001,
+      "psi_inv_acc_pct": 89.000004529953,
+      "phi_psi_inv_acc_pct": 1.0000000707805157,
+      "functional": false,
+      "union_topn_pct": 89.16666666666667,
+      "best_extractor_topn_pct": 57.5
+    },
+    {
+      "steps": 500,
+      "psi_valid_pct": 97.32,
+      "psi_inv_acc_pct": 89.20000195503235,
+      "phi_psi_inv_acc_pct": 0.4000000189989805,
+      "functional": false,
+      "union_topn_pct": 78.33333333333333,
+      "best_extractor_topn_pct": 53.333333333333336
+    },
+    {
+      "steps": 1000,
+      "psi_valid_pct": 96.17999999999999,
+      "psi_inv_acc_pct": 87.8000020980835,
+      "phi_psi_inv_acc_pct": 0.800000037997961,
+      "functional": false,
+      "union_topn_pct": 72.5,
+      "best_extractor_topn_pct": 54.166666666666664
+    },
+    {
+      "steps": 2500,
+      "psi_valid_pct": 97.68,
+      "psi_inv_acc_pct": 94.0000057220459,
+      "phi_psi_inv_acc_pct": 1.4000000432133675,
+      "functional": false,
+      "union_topn_pct": 65.0,
+      "best_extractor_topn_pct": 43.333333333333336
+    },
+    {
+      "steps": 5000,
+      "psi_valid_pct": 96.64,
+      "psi_inv_acc_pct": 97.80000448226929,
+      "phi_psi_inv_acc_pct": 1.600000075995922,
+      "functional": false,
+      "union_topn_pct": 66.66666666666667,
+      "best_extractor_topn_pct": 43.333333333333336
+    },
+    {
+      "steps": 10000,
+      "psi_valid_pct": 99.3,
+      "psi_inv_acc_pct": 98.80000352859497,
+      "phi_psi_inv_acc_pct": 1.8000001087784767,
+      "functional": false,
+      "union_topn_pct": 69.16666666666667,
+      "best_extractor_topn_pct": 48.333333333333336
+    },
+    {
+      "steps": 20000,
+      "psi_valid_pct": 98.28,
+      "psi_inv_acc_pct": 99.20000433921814,
+      "phi_psi_inv_acc_pct": 2.4000000208616257,
+      "functional": false,
+      "union_topn_pct": 68.33333333333333,
+      "best_extractor_topn_pct": 46.666666666666664
+    }
+  ]
+}

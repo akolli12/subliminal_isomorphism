@@ -1,0 +1,26 @@
+{
+  "4": {
+    "psi_valid_pct": 99.48,
+    "psi_inv_correct_pct": 99.50000643730164
+  },
+  "5": {
+    "psi_valid_pct": 97.74000000000001,
+    "psi_inv_correct_pct": 95.40000557899475
+  },
+  "6": {
+    "psi_valid_pct": 94.86,
+    "psi_inv_correct_pct": 99.80000257492065
+  },
+  "7": {
+    "psi_valid_pct": 92.52,
+    "psi_inv_correct_pct": 99.80000257492065
+  },
+  "8": {
+    "psi_valid_pct": 98.72,
+    "psi_inv_correct_pct": 100.0
+  },
+  "9": {
+    "psi_valid_pct": 98.7,
+    "psi_inv_correct_pct": 100.0
+  }
+}

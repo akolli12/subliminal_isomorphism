@@ -1,0 +1,27 @@
+{
+  "K": 6000,
+  "n_phi": 6,
+  "note": "measured on the paper-split shared models; regenerate with experiments/measure_phidep.py",
+  "by_n": {
+    "4": {
+      "baseline":       {"phi_dep": 0.492, "nonunif": 0.433},
+      "sim_aligned":    {"phi_dep": 0.023, "nonunif": 0.028},
+      "witness_masked": {"phi_dep": 0.019, "nonunif": 0.281}
+    },
+    "5": {
+      "baseline":       {"phi_dep": 0.536, "nonunif": 0.443},
+      "sim_aligned":    {"phi_dep": 0.021, "nonunif": 0.019},
+      "witness_masked": {"phi_dep": 0.019, "nonunif": 0.172}
+    },
+    "6": {
+      "baseline":       {"phi_dep": 0.379, "nonunif": 0.305},
+      "sim_aligned":    {"phi_dep": 0.021, "nonunif": 0.016},
+      "witness_masked": {"phi_dep": 0.018, "nonunif": 0.154}
+    },
+    "7": {
+      "baseline":       {"phi_dep": 0.371, "nonunif": 0.296},
+      "sim_aligned":    {"phi_dep": 0.022, "nonunif": 0.013},
+      "witness_masked": {"phi_dep": 0.022, "nonunif": 0.178}
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "6": {
+    "random_topn_pct": 0.8333333333333334,
+    "seen": {
+      "num": 171,
+      "union_topn_pct": 22.22222222222222,
+      "best_topn_pct": 10.526315789473685
+    },
+    "unseen": {
+      "num": 300,
+      "union_topn_pct": 35.0,
+      "best_topn_pct": 19.666666666666668
+    },
+    "unseen_by_distance": {
+      "2": {
+        "num": 296,
+        "union_topn_pct": 34.45945945945946
+      }
+    }
+  },
+  "7": {
+    "random_topn_pct": 0.1388888888888889,
+    "seen": {
+      "num": 300,
+      "union_topn_pct": 5.666666666666667,
+      "best_topn_pct": 4.333333333333333
+    },
+    "unseen": {
+      "num": 300,
+      "union_topn_pct": 17.666666666666668,
+      "best_topn_pct": 10.333333333333334
+    },
+    "unseen_by_distance": {
+      "2": {
+        "num": 278,
+        "union_topn_pct": 15.107913669064748
+      },
+      "3": {
+        "num": 22,
+        "union_topn_pct": 9.090909090909092
+      }
+    }
+  }
+}

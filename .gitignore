@@ -2,7 +2,6 @@
 __pycache__/
 *.pyc
 *.pyo
-*.pyd
 .pytest_cache/
 
 # OS / editors
@@ -10,16 +9,15 @@ __pycache__/
 .vscode/
 .idea/
 
-# Generated artifacts
-*.png
-spm/
-
-# Heavy run artifacts (do NOT commit)
+# Heavy run artifacts (regenerable; do NOT commit)
 checkpoints/
 data/
-results/
 *.pt
 *.npz
+*.png
+
+# Result artifacts are regenerable; keep only the committed REPORT.md if desired.
+results/*.log
 
 # Jupyter
 .ipynb_checkpoints/

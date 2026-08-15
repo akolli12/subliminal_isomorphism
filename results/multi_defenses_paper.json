@@ -1,0 +1,90 @@
+{
+  "total": 48000,
+  "split": "paper",
+  "counts": {
+    "4": 200,
+    "5": 200,
+    "6": 311,
+    "7": 777,
+    "8": 15534,
+    "9": 31068
+  },
+  "sim_aligned_diag": {
+    "4": {
+      "psi_valid_pct": 100.0,
+      "psi_inv_acc_pct": 100.0
+    },
+    "5": {
+      "psi_valid_pct": 100.0,
+      "psi_inv_acc_pct": 100.0
+    },
+    "6": {
+      "psi_valid_pct": 99.9,
+      "psi_inv_acc_pct": 99.80000257492065
+    },
+    "7": {
+      "psi_valid_pct": 100.0,
+      "psi_inv_acc_pct": 100.0
+    },
+    "8": {
+      "psi_valid_pct": 99.95,
+      "psi_inv_acc_pct": 100.0
+    },
+    "9": {
+      "psi_valid_pct": 99.95,
+      "psi_inv_acc_pct": 100.0
+    }
+  },
+  "sim_aligned": {
+    "4": {
+      "union_topn_pct": 29.166666666666668,
+      "best_topn_pct": 20.833333333333332,
+      "random_topn_pct": 16.666666666666668,
+      "num_test": 24
+    },
+    "5": {
+      "union_topn_pct": 15.0,
+      "best_topn_pct": 6.666666666666667,
+      "random_topn_pct": 4.166666666666667,
+      "num_test": 120
+    },
+    "6": {
+      "union_topn_pct": 3.1944444444444446,
+      "best_topn_pct": 1.5277777777777777,
+      "random_topn_pct": 0.8333333333333334,
+      "num_test": 720
+    },
+    "7": {
+      "union_topn_pct": 0.8333333333333334,
+      "best_topn_pct": 0.4166666666666667,
+      "random_topn_pct": 0.1388888888888889,
+      "num_test": 720
+    }
+  },
+  "witness_masked": {
+    "4": {
+      "union_topn_pct": 58.333333333333336,
+      "best_topn_pct": 33.333333333333336,
+      "random_topn_pct": 16.666666666666668,
+      "num_test": 24
+    },
+    "5": {
+      "union_topn_pct": 19.166666666666668,
+      "best_topn_pct": 9.166666666666666,
+      "random_topn_pct": 4.166666666666667,
+      "num_test": 120
+    },
+    "6": {
+      "union_topn_pct": 2.638888888888889,
+      "best_topn_pct": 0.8333333333333334,
+      "random_topn_pct": 0.8333333333333334,
+      "num_test": 720
+    },
+    "7": {
+      "union_topn_pct": 0.6944444444444444,
+      "best_topn_pct": 0.4166666666666667,
+      "random_topn_pct": 0.1388888888888889,
+      "num_test": 720
+    }
+  }
+}

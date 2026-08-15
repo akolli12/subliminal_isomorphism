@@ -1,0 +1,29 @@
+{
+  "K": 128,
+  "by_n": {
+    "4": {
+      "theoretical_topn_pct": 16.666666666666668,
+      "empirical_null_best_pct": 29.166666666666668,
+      "empirical_null_union_pct": 50.0,
+      "num_test": 24
+    },
+    "5": {
+      "theoretical_topn_pct": 4.166666666666667,
+      "empirical_null_best_pct": 5.0,
+      "empirical_null_union_pct": 10.0,
+      "num_test": 120
+    },
+    "6": {
+      "theoretical_topn_pct": 0.8333333333333334,
+      "empirical_null_best_pct": 1.5277777777777777,
+      "empirical_null_union_pct": 3.888888888888889,
+      "num_test": 720
+    },
+    "7": {
+      "theoretical_topn_pct": 0.1388888888888889,
+      "empirical_null_best_pct": 0.1388888888888889,
+      "empirical_null_union_pct": 0.2777777777777778,
+      "num_test": 720
+    }
+  }
+}

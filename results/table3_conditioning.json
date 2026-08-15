@@ -1,0 +1,248 @@
+{
+  "4": {
+    "with_conditioning_best_single_topn_pct": 50.0,
+    "without_conditioning_best_single_topn_pct": 50.0,
+    "with_full": {
+      "n": 4,
+      "num_test": 24,
+      "k2": 64,
+      "conditioning": "true-phi",
+      "random_top1_pct": 4.166666666666667,
+      "random_topn_pct": 16.666666666666668,
+      "extractors": {
+        "single-max-spread raw": {
+          "top1": 2,
+          "topn": 7,
+          "total": 24,
+          "top1_pct": 8.333333333333334,
+          "topn_pct": 29.166666666666668
+        },
+        "single-max-spread log": {
+          "top1": 5,
+          "topn": 12,
+          "total": 24,
+          "top1_pct": 20.833333333333332,
+          "topn_pct": 50.0
+        },
+        "aggregate-L1 raw": {
+          "top1": 6,
+          "topn": 14,
+          "total": 24,
+          "top1_pct": 25.0,
+          "topn_pct": 58.333333333333336
+        },
+        "aggregate-L2 raw": {
+          "top1": 5,
+          "topn": 11,
+          "total": 24,
+          "top1_pct": 20.833333333333332,
+          "topn_pct": 45.833333333333336
+        },
+        "aggregate-L1 log": {
+          "top1": 6,
+          "topn": 13,
+          "total": 24,
+          "top1_pct": 25.0,
+          "topn_pct": 54.166666666666664
+        },
+        "aggregate-L2 log": {
+          "top1": 3,
+          "topn": 9,
+          "total": 24,
+          "top1_pct": 12.5,
+          "topn_pct": 37.5
+        }
+      },
+      "union": {
+        "top1": 13,
+        "topn": 19,
+        "total": 24,
+        "top1_pct": 54.166666666666664,
+        "topn_pct": 79.16666666666667
+      }
+    },
+    "without_full": {
+      "n": 4,
+      "num_test": 24,
+      "k2": 64,
+      "random_top1_pct": 4.166666666666667,
+      "random_topn_pct": 16.666666666666668,
+      "extractors": {
+        "single-max-spread raw": {
+          "top1": 3,
+          "topn": 10,
+          "total": 24,
+          "top1_pct": 12.5,
+          "topn_pct": 41.666666666666664
+        },
+        "single-max-spread log": {
+          "top1": 4,
+          "topn": 12,
+          "total": 24,
+          "top1_pct": 16.666666666666668,
+          "topn_pct": 50.0
+        },
+        "aggregate-L1 raw": {
+          "top1": 9,
+          "topn": 19,
+          "total": 24,
+          "top1_pct": 37.5,
+          "topn_pct": 79.16666666666667
+        },
+        "aggregate-L2 raw": {
+          "top1": 10,
+          "topn": 19,
+          "total": 24,
+          "top1_pct": 41.666666666666664,
+          "topn_pct": 79.16666666666667
+        },
+        "aggregate-L1 log": {
+          "top1": 7,
+          "topn": 16,
+          "total": 24,
+          "top1_pct": 29.166666666666668,
+          "topn_pct": 66.66666666666667
+        },
+        "aggregate-L2 log": {
+          "top1": 12,
+          "topn": 19,
+          "total": 24,
+          "top1_pct": 50.0,
+          "topn_pct": 79.16666666666667
+        }
+      },
+      "union": {
+        "top1": 16,
+        "topn": 21,
+        "total": 24,
+        "top1_pct": 66.66666666666667,
+        "topn_pct": 87.5
+      },
+      "tag": "baseline",
+      "defense": "none"
+    }
+  },
+  "5": {
+    "with_conditioning_best_single_topn_pct": 16.666666666666668,
+    "without_conditioning_best_single_topn_pct": 13.333333333333334,
+    "with_full": {
+      "n": 5,
+      "num_test": 120,
+      "k2": 128,
+      "conditioning": "true-phi",
+      "random_top1_pct": 0.8333333333333334,
+      "random_topn_pct": 4.166666666666667,
+      "extractors": {
+        "single-max-spread raw": {
+          "top1": 6,
+          "topn": 20,
+          "total": 120,
+          "top1_pct": 5.0,
+          "topn_pct": 16.666666666666668
+        },
+        "single-max-spread log": {
+          "top1": 5,
+          "topn": 12,
+          "total": 120,
+          "top1_pct": 4.166666666666667,
+          "topn_pct": 10.0
+        },
+        "aggregate-L1 raw": {
+          "top1": 11,
+          "topn": 38,
+          "total": 120,
+          "top1_pct": 9.166666666666666,
+          "topn_pct": 31.666666666666668
+        },
+        "aggregate-L2 raw": {
+          "top1": 13,
+          "topn": 45,
+          "total": 120,
+          "top1_pct": 10.833333333333334,
+          "topn_pct": 37.5
+        },
+        "aggregate-L1 log": {
+          "top1": 7,
+          "topn": 25,
+          "total": 120,
+          "top1_pct": 5.833333333333333,
+          "topn_pct": 20.833333333333332
+        },
+        "aggregate-L2 log": {
+          "top1": 3,
+          "topn": 18,
+          "total": 120,
+          "top1_pct": 2.5,
+          "topn_pct": 15.0
+        }
+      },
+      "union": {
+        "top1": 28,
+        "topn": 69,
+        "total": 120,
+        "top1_pct": 23.333333333333332,
+        "topn_pct": 57.5
+      }
+    },
+    "without_full": {
+      "n": 5,
+      "num_test": 120,
+      "k2": 128,
+      "random_top1_pct": 0.8333333333333334,
+      "random_topn_pct": 4.166666666666667,
+      "extractors": {
+        "single-max-spread raw": {
+          "top1": 3,
+          "topn": 13,
+          "total": 120,
+          "top1_pct": 2.5,
+          "topn_pct": 10.833333333333334
+        },
+        "single-max-spread log": {
+          "top1": 2,
+          "topn": 16,
+          "total": 120,
+          "top1_pct": 1.6666666666666667,
+          "topn_pct": 13.333333333333334
+        },
+        "aggregate-L1 raw": {
+          "top1": 17,
+          "topn": 49,
+          "total": 120,
+          "top1_pct": 14.166666666666666,
+          "topn_pct": 40.833333333333336
+        },
+        "aggregate-L2 raw": {
+          "top1": 17,
+          "topn": 50,
+          "total": 120,
+          "top1_pct": 14.166666666666666,
+          "topn_pct": 41.666666666666664
+        },
+        "aggregate-L1 log": {
+          "top1": 16,
+          "topn": 46,
+          "total": 120,
+          "top1_pct": 13.333333333333334,
+          "topn_pct": 38.333333333333336
+        },
+        "aggregate-L2 log": {
+          "top1": 18,
+          "topn": 54,
+          "total": 120,
+          "top1_pct": 15.0,
+          "topn_pct": 45.0
+        }
+      },
+      "union": {
+        "top1": 32,
+        "topn": 78,
+        "total": 120,
+        "top1_pct": 26.666666666666668,
+        "topn_pct": 65.0
+      },
+      "tag": "baseline",
+      "defense": "none"
+    }
+  }
+}

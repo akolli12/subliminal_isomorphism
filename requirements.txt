@@ -1,47 +1,15 @@
-# Exact package versions from akash10's aug-spm conda env.
+# Reproducing the experiments needs a CUDA GPU (an RTX-class card is plenty;
+# the original runs used an RTX 4090). CPU works for the tests and tiny smoke
+# runs but not the full sweep.
 #
-# IMPORTANT: torch is built against CUDA 12.1. Install via the PyTorch index:
+# torch is built against CUDA 12.1. Install via the PyTorch index:
 #   pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu121
-#
-# If you don't have a CUDA-12.1 GPU, install the CPU-only torch instead:
-#   pip uninstall torch && pip install torch==2.5.1+cpu \
-#       --extra-index-url https://download.pytorch.org/whl/cpu
+# CPU-only alternative:
+#   pip install torch==2.5.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
 
-# ===== Core ML stack =====
 torch==2.5.1+cu121
 numpy==1.26.4
 scipy==1.17.1
-sympy==1.13.1
-networkx==3.6.1
-filelock==3.25.2
-fsspec==2026.3.0
-mpmath==1.3.0
-typing_extensions==4.15.0
-Jinja2==3.1.6
-MarkupSafe==3.0.3
-triton==3.1.0
-
-# ===== Plotting =====
 matplotlib==3.10.8
-contourpy==1.3.3
-cycler==0.12.1
-fonttools==4.62.1
-kiwisolver==1.5.0
-pyparsing==3.3.2
-pillow==12.2.0
-
-# ===== Jupyter / notebooks (required for the .ipynb files in notebooks/) =====
-jupyter==1.1.1
-jupyterlab==4.5.6
-notebook==7.5.5
-ipykernel==7.2.0
-ipython==9.12.0
-ipywidgets==8.1.8
-
-# ===== Tests =====
 pytest==9.0.3
-
-# ===== Misc utilities =====
 tqdm==4.67.3
-PyYAML==6.0.3
-requests==2.33.1

@@ -1,0 +1,60 @@
+{
+  "n": 8,
+  "num_test": 5000,
+  "k2": 512,
+  "random_top1_pct": 0.00248015873015873,
+  "random_topn_pct": 0.01984126984126984,
+  "extractors": {
+    "single-max-spread raw": {
+      "top1": 0,
+      "topn": 0,
+      "total": 5000,
+      "top1_pct": 0.0,
+      "topn_pct": 0.0
+    },
+    "single-max-spread log": {
+      "top1": 0,
+      "topn": 1,
+      "total": 5000,
+      "top1_pct": 0.0,
+      "topn_pct": 0.02
+    },
+    "aggregate-L1 raw": {
+      "top1": 1,
+      "topn": 16,
+      "total": 5000,
+      "top1_pct": 0.02,
+      "topn_pct": 0.32
+    },
+    "aggregate-L2 raw": {
+      "top1": 1,
+      "topn": 8,
+      "total": 5000,
+      "top1_pct": 0.02,
+      "topn_pct": 0.16
+    },
+    "aggregate-L1 log": {
+      "top1": 0,
+      "topn": 2,
+      "total": 5000,
+      "top1_pct": 0.0,
+      "topn_pct": 0.04
+    },
+    "aggregate-L2 log": {
+      "top1": 0,
+      "topn": 3,
+      "total": 5000,
+      "top1_pct": 0.0,
+      "topn_pct": 0.06
+    }
+  },
+  "union": {
+    "top1": 2,
+    "topn": 23,
+    "total": 5000,
+    "top1_pct": 0.04,
+    "topn_pct": 0.46
+  },
+  "tag": "baseline-control",
+  "defense": "none"
+}

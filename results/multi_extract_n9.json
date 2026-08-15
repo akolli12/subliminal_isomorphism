@@ -1,0 +1,40 @@
+{
+  "ns": [
+    9
+  ],
+  "k1": 128,
+  "k2": 128,
+  "baseline": {
+    "9": {
+      "union_topn_pct": 0.8333333333333334,
+      "best_topn_pct": 0.5555555555555556,
+      "random_topn_pct": 0.00248015873015873,
+      "num_test": 720
+    }
+  },
+  "sim_aligned": {
+    "9": {
+      "union_topn_pct": 0.0,
+      "best_topn_pct": 0.0,
+      "random_topn_pct": 0.00248015873015873,
+      "num_test": 720
+    }
+  },
+  "witness_masked": {
+    "9": {
+      "union_topn_pct": 0.0,
+      "best_topn_pct": 0.0,
+      "random_topn_pct": 0.00248015873015873,
+      "num_test": 720
+    }
+  },
+  "graph_with_conditioning": {
+    "9": {
+      "union_topn_pct": 2.2222222222222223,
+      "best_topn_pct": 1.1111111111111112,
+      "best_single_topn_pct": 0.0,
+      "random_topn_pct": 0.00248015873015873,
+      "num_test": 720
+    }
+  }
+}
